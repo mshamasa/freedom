@@ -1,5 +1,8 @@
 # ignore executables
 *.exe
 
+#ignore build file
+freedom
+
 #ignore random stuff
 .DS_Store

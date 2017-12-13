@@ -1,9 +1,7 @@
 package strength
 
-import "time"
-
 type Strength struct {
-  Due         time.Time `json:"due"`
+  Date         int64 `json:"date"`
   WorkoutList []Workout `json:"workoutList"`
 }
 

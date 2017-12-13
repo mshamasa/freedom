@@ -1,5 +1,6 @@
 package strength
 
+import "time"
 // import "errors"
 
 // StrengthService handles returning info
@@ -25,6 +26,7 @@ func (strengthService) Index() StrengthList {
 
   strengthList:= StrengthList {
     Strength {
+      Date: time.Now().Unix(),
       WorkoutList: workoutList,
     },
   }

@@ -28,23 +28,11 @@ func (strengthService) Index(request interface{}) StrengthList {
   defer db.Close()
   // query
   req := request.(strengthRequest)
-  db.Where("userId = ?", req.UserId).Order("date desc").Find(&workouts)
+  // TODO set limit based on dates instead of this way
+  db.Where("userId = ?", req.UserId).Order("date desc").Limit(20).Find(&workouts)
   db.Close()
 
-  workoutsMap := make(map[int32][]Workout)
-  for i := 0; i < len(workouts); i++ {
-    date := workouts[i].Date
-    workoutsMap[date] = append(workoutsMap[date], workouts[i])
-  }
-
-  strengthList := StrengthList{}
-  for k, v := range workoutsMap {
-    strength := Strength {
-      Date: k,
-      WorkoutList: v,
-    }
-    strengthList = append(strengthList, strength)
-  }
+  strengthList := sortWorkouts(workouts)
 
   return strengthList;
 }

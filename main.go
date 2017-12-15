@@ -14,6 +14,7 @@ func main() {
   router := mux.NewRouter()
 
   router.Methods("GET").PathPrefix("/strength/{userId}").Handler(strength.IndexHandler)
+  router.Methods("POST").PathPrefix("/strength/add").Handler(strength.AddHandler)
   router.HandleFunc("/add", Add)
   router.HandleFunc("/edit/{id}", Edit)
   log.Fatal(http.ListenAndServe(":8080", router))

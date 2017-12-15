@@ -12,6 +12,7 @@ type StrengthService interface {
   //TODO error handling...later
   // Index() (StrengthList, error)
   Index(request interface{}) StrengthList
+  Add()
 }
 
 type strengthService struct{}
@@ -35,6 +36,10 @@ func (strengthService) Index(request interface{}) StrengthList {
   strengthList := sortWorkouts(workouts)
 
   return strengthList;
+}
+
+func (strengthService) Add() {
+
 }
 
 

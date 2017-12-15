@@ -10,7 +10,19 @@ import (
   "github.com/gorilla/mux"
 )
 
-func MakeStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
+  return func(ctx context.Context, request interface{}) (interface{}, error) {
+    // TODO error handling...later
+    // list, err := svc.Index()
+    list := svc.Index(request)
+    // if err != nil {
+    //   return strengthResponse{list, err.Error()}, nil
+    // }
+    return strengthResponse{list, ""}, nil
+  }
+}
+
+func MakeAddStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
   return func(ctx context.Context, request interface{}) (interface{}, error) {
     // TODO error handling...later
     // list, err := svc.Index()

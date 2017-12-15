@@ -28,7 +28,7 @@ func (strengthService) Index(request interface{}) StrengthList {
   defer db.Close()
   // query
   req := request.(strengthRequest)
-  db.Where("userId = ?", req.UserId).Find(&workouts)
+  db.Where("userId = ?", req.UserId).Order("date desc").Find(&workouts)
   db.Close()
 
   workoutsMap := make(map[int32][]Workout)

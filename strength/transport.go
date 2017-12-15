@@ -25,6 +25,9 @@ func MakeStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
 func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, error) {
   vars := mux.Vars(r)
   // userId := vars["userId"]
+  // TODO passing params through url
+  // queries := r.URL.Query()
+  // request := strengthRequest{vars["userId"], queries["startDate"][0], queries["endDate"][0]}
   request := strengthRequest{vars["userId"]}
 
   if request.UserId == "" {
@@ -39,6 +42,9 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 type strengthRequest struct {
   UserId string `json:"userId"`
+  // TODO future....
+  // StartDate string `json:"startDate"`
+  // EndDate string `json:"endDate"`
 }
 
 type strengthResponse struct {

@@ -9,7 +9,7 @@ func (a StrengthList) Less(i, j int) bool {
 }
 
 func sortWorkouts(workouts []Workout) []Strength {
-  workoutsMap := make(map[int32][]Workout)
+  workoutsMap := make(map[int64][]Workout)
   for i := 0; i < len(workouts); i++ {
     date := workouts[i].Date
     workoutsMap[date] = append(workoutsMap[date], workouts[i])

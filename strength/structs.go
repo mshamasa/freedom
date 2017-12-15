@@ -1,7 +1,7 @@
 package strength
 
 type Strength struct {
-  Date         int32 `json:"date"`
+  Date         int64 `json:"date"`
   WorkoutList []Workout `json:"workoutList"`
 }
 
@@ -12,5 +12,5 @@ type Workout struct {
   Sets      int32     `json:"sets"`
   Reps      int32     `json:"reps"`
   Completed int32     `json:"completed"`
-  Date      int32     `json:"date"`
+  Date      int64     `json:"date"`
 }

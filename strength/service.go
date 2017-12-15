@@ -1,9 +1,9 @@
 package strength
 
 import (
-  "database/sql"
   "fmt"
-  _ "github.com/mattn/go-sqlite3"
+  "github.com/jinzhu/gorm"
+    _ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 // import "errors"
 
@@ -11,7 +11,7 @@ import (
 type StrengthService interface {
   //TODO error handling...later
   // Index() (StrengthList, error)
-  Index() StrengthList
+  Index(request interface{}) StrengthList
 }
 
 type strengthService struct{}
@@ -19,58 +19,35 @@ type strengthService struct{}
 type StrengthList []Strength
 type WorkoutList []Workout
 
-func (strengthService) Index() StrengthList {
-  workoutList := WorkoutList {}
-
-  db, err := sql.Open("sqlite3", "./strength.db")
-  checkErr(err)
+func (strengthService) Index(request interface{}) StrengthList {
+  workouts := WorkoutList {}
+  db, err := gorm.Open("sqlite3", "./strength.db")
   if err != nil {
     fmt.Println("could not connect to database.")
   }
   defer db.Close()
   // query
-  rows, err := db.Query("SELECT * FROM workouts")
-  checkErr(err)
-  var userId string
-  var exercise int32
-  var weight float32
-  var sets int32
-  var reps int32
-  var completed int32
-  var date int32
-
-  for rows.Next() {
-    err = rows.Scan(&userId, &exercise, &weight, &sets, &reps, &completed, &date)
-    checkErr(err)
-
-    workout := Workout {
-      UserId: userId,
-      Exercise: exercise,
-      Weight: weight,
-      Sets: sets,
-      Reps: reps,
-      Completed: completed,
-      Date: date,
-    }
-    workoutList = append(workoutList, workout)
-  }
-
-  rows.Close()
+  req := request.(strengthRequest)
+  db.Where("userId = ?", req.UserId).Find(&workouts)
   db.Close()
 
-  strengthList:= StrengthList {
-    Strength {
-      WorkoutList: workoutList,
-    },
+  workoutsMap := make(map[int32][]Workout)
+  for i := 0; i < len(workouts); i++ {
+    date := workouts[i].Date
+    workoutsMap[date] = append(workoutsMap[date], workouts[i])
+  }
+
+  strengthList := StrengthList{}
+  for k, v := range workoutsMap {
+    strength := Strength {
+      Date: k,
+      WorkoutList: v,
+    }
+    strengthList = append(strengthList, strength)
   }
 
   return strengthList;
 }
 
-func checkErr(err error) {
-  if err != nil {
-    panic(err)
-  }
-}
 
 // var Error = errors.New("Shit fucked yo!")

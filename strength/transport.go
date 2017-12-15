@@ -14,7 +14,7 @@ func MakeStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
   return func(ctx context.Context, request interface{}) (interface{}, error) {
     // TODO error handling...later
     // list, err := svc.Index()
-    list := svc.Index()
+    list := svc.Index(request)
     // if err != nil {
     //   return strengthResponse{list, err.Error()}, nil
     // }

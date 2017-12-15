@@ -1,12 +1,12 @@
 package strength
 
 type Strength struct {
-  Date         int64 `json:"date"`
+  Date         int32 `json:"date"`
   WorkoutList []Workout `json:"workoutList"`
 }
 
 type Workout struct {
-  UserId    string    `json:userId`
+  UserId    string    `gorm:"column:userId" json:"userId"`
   Exercise  int32     `json:"exercise"`
   Weight    float32   `json:"weight"`
   Sets      int32     `json:"sets"`

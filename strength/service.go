@@ -30,7 +30,7 @@ func (strengthService) Index(request interface{}) StrengthList {
   // query
   req := request.(strengthRequest)
   // TODO set limit based on dates instead of this way
-  db.Where("userId = ?", req.UserId).Order("date desc").Limit(20).Find(&workouts)
+  db.Raw("SELECT rowid, * FROM workouts WHERE userId = ?", req.UserId).Order("date desc").Limit(20).Scan(&workouts)
   db.Close()
 
   strengthList := sortWorkouts(workouts)

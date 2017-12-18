@@ -12,7 +12,7 @@ type StrengthService interface {
   //TODO error handling...later
   // Index() (StrengthList, error)
   Index(request interface{}) StrengthList
-  Add()
+  Save(request interface{})
 }
 
 type strengthService struct{}
@@ -38,8 +38,26 @@ func (strengthService) Index(request interface{}) StrengthList {
   return strengthList;
 }
 
-func (strengthService) Add() {
+func (strengthService) Save(request interface{}) {
+  req := request.(strengthRequest)
+  userId := req.UserId
+  strengthList := req.List
 
+  db, err := gorm.Open("sqlite3", "./strength.db")
+  if err != nil {
+    fmt.Println("could not connect to database.")
+  }
+  defer db.Close()
+
+  for i := 0; i < len(strengthList); i++ {
+    date := strengthList[i].Date
+    workouts := generateWorkouts(date, userId, strengthList[i].WorkoutList)
+    for j := 0; j < len(workouts); j++ {
+      wk := workouts[j]
+      db.Create(&wk)
+    }
+  }
+  db.Close()
 }
 
 

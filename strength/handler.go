@@ -7,12 +7,12 @@ var service = strengthService{}
 
 var IndexHandler = httptransport.NewServer(
   MakeIndexStrengthEndpoint(service),
-  DecodeStrengthRequest,
+  DecodeStrengthGetRequest,
   EncodeResponse,
 )
 
-var AddHandler = httptransport.NewServer(
-  MakeAddStrengthEndpoint(service),
-  DecodeStrengthRequest,
+var SaveHandler = httptransport.NewServer(
+  MakeSaveStrengthEndpoint(service),
+  DecodeStrengthPostRequest,
   EncodeResponse,
 )

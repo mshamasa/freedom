@@ -18,33 +18,43 @@ func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
     // if err != nil {
     //   return strengthResponse{list, err.Error()}, nil
     // }
-    return strengthResponse{list, ""}, nil
+    return strengthResponse{list, "", ""}, nil
   }
 }
 
-func MakeAddStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeSaveStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
   return func(ctx context.Context, request interface{}) (interface{}, error) {
     // TODO error handling...later
     // list, err := svc.Index()
-    list := svc.Index(request)
-    // if err != nil {
-    //   return strengthResponse{list, err.Error()}, nil
-    // }
-    return strengthResponse{list, ""}, nil
+    svc.Save(request)
+    return strengthResponse{nil, "", ""}, nil
   }
 }
 
-func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, error) {
   vars := mux.Vars(r)
-  // userId := vars["userId"]
   // TODO passing params through url
   // queries := r.URL.Query()
   // request := strengthRequest{vars["userId"], queries["startDate"][0], queries["endDate"][0]}
-  request := strengthRequest{vars["userId"]}
+  request := strengthRequest{vars["userId"], nil}
 
   if request.UserId == "" {
     return nil, errors.New("UserId missing!")
   }
+  return request, nil
+}
+
+func DecodeStrengthPostRequest(_ context.Context, r *http.Request) (interface{}, error) {
+  var request strengthRequest
+  json.NewDecoder(r.Body).Decode(&request)
+
+  if request.UserId == "" {
+    return nil, errors.New("UserId missing!")
+  }
+  if len(request.List) == 0 {
+    return nil, errors.New("List Empty!")
+  }
+
   return request, nil
 }
 
@@ -57,9 +67,11 @@ type strengthRequest struct {
   // TODO future....
   // StartDate string `json:"startDate"`
   // EndDate string `json:"endDate"`
+  List []Strength `json:"list"`
 }
 
 type strengthResponse struct {
   List []Strength `json:"list"`
   Err string `json:"err, omitempty"`
+  Code string `json:"code, omitempty"`
 }

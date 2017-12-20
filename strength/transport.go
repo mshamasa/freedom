@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// MakeIndexStrengthEndpoint is the endpoint for retrieving data.
 func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		// TODO error handling...later
@@ -22,6 +23,7 @@ func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
 	}
 }
 
+// MakeSaveRowEndpoint is the endpoint for saving a row.
 func MakeSaveRowEndpoint(svc StrengthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		// TODO error handling...later
@@ -31,6 +33,7 @@ func MakeSaveRowEndpoint(svc StrengthService) endpoint.Endpoint {
 	}
 }
 
+// MakeSaveWorkoutEndpoint is the endpoint for saving a workout.
 func MakeSaveWorkoutEndpoint(svc StrengthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		// TODO error handling...later
@@ -40,41 +43,54 @@ func MakeSaveWorkoutEndpoint(svc StrengthService) endpoint.Endpoint {
 	}
 }
 
+// MakeUpdateDateEndpoint is the endpoint for updating the date for records.
+func MakeUpdateDateEndpoint(svc StrengthService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		svc.UpdateRowsDate(request)
+
+		return strengthResponse{nil, Workout{}, "", ""}, nil
+	}
+}
+
+// DecodeStrengthGetRequest will decode the request paramters.
 func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	vars := mux.Vars(r)
 	// TODO passing params through url
 	// queries := r.URL.Query()
 	// request := strengthRequest{vars["userId"], queries["startDate"][0], queries["endDate"][0]}
-	request := strengthRequest{vars["userId"], Workout{}, nil}
+	request := strengthRequest{vars["userId"], Workout{}, nil, Row{}}
 
-	if request.UserId == "" {
-		return nil, errors.New("UserId missing!")
+	if request.UserID == "" {
+		return nil, errors.New("userId missing")
 	}
 	return request, nil
 }
 
+// DecodeStrengthRequest will decode the request paramters.
 func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request strengthRequest
 	json.NewDecoder(r.Body).Decode(&request)
 
-	if request.UserId == "" {
-		return nil, errors.New("UserId missing!")
+	if request.UserID == "" {
+		return nil, errors.New("userId missing")
 	}
-	if len(request.List) == 0 && request.Workout == (Workout{}) {
+	if len(request.List) == 0 && request.Workout == (Workout{}) && len(request.Row.RowIds) == 0 {
 		return nil, errors.New("Nothing to Save/Update")
 	}
 
 	return request, nil
 }
 
+// EncodeResponse will encode the results and return the response.
 func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
 }
 
 type strengthRequest struct {
-	UserId  string     `json:"userId"`
+	UserID  string     `json:"userId"`
 	Workout Workout    `json:"workout"`
 	List    []Strength `json:"list"`
+	Row     Row        `json:"row"`
 }
 
 type strengthResponse struct {

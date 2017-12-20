@@ -28,11 +28,11 @@ func sortWorkouts(workouts []Workout) []Strength {
 	return strengthList
 }
 
-func generateWorkouts(date int64, userId string, workouts []Workout) []Workout {
+func generateWorkouts(date int64, userID string, workouts []Workout) []Workout {
 	workoutList := WorkoutList{}
 	for i := 0; i < len(workouts); i++ {
 		workout := Workout{
-			UserId:    userId,
+			UserID:    userID,
 			Exercise:  workouts[i].Exercise,
 			Weight:    workouts[i].Weight,
 			Sets:      workouts[i].Sets,

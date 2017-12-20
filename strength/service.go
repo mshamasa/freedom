@@ -4,18 +4,20 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
+	// what the flying fuck with these comments.
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 // import "errors"
 
-// StrengthService handles returning info
+// StrengthService interface that will require implementation of methods.
 type StrengthService interface {
 	//TODO error handling...later
 	// Index() (StrengthList, error)
 	Index(request interface{}) StrengthList
 	SaveRow(request interface{})
 	SaveWorkout(request interface{}) Workout
+	UpdateRowsDate(request interface{})
 }
 
 type strengthService struct{}
@@ -33,7 +35,7 @@ func (strengthService) Index(request interface{}) StrengthList {
 	// query
 	req := request.(strengthRequest)
 	// TODO set limit based on dates instead of this way
-	db.Raw("SELECT rowid, * FROM workouts WHERE userId = ?", req.UserId).Order("date desc").Limit(20).Scan(&workouts)
+	db.Raw("SELECT rowid, * FROM workouts WHERE userId = ?", req.UserID).Order("date desc").Limit(20).Scan(&workouts)
 	db.Close()
 
 	strengthList := sortWorkouts(workouts)
@@ -43,7 +45,7 @@ func (strengthService) Index(request interface{}) StrengthList {
 
 func (strengthService) SaveRow(request interface{}) {
 	req := request.(strengthRequest)
-	userId := req.UserId
+	UserID := req.UserID
 	strengthList := req.List
 
 	db, err := gorm.Open("sqlite3", "./strength.db")
@@ -54,7 +56,7 @@ func (strengthService) SaveRow(request interface{}) {
 
 	for i := 0; i < len(strengthList); i++ {
 		date := strengthList[i].Date
-		workouts := generateWorkouts(date, userId, strengthList[i].WorkoutList)
+		workouts := generateWorkouts(date, UserID, strengthList[i].WorkoutList)
 		for j := 0; j < len(workouts); j++ {
 			wk := workouts[j]
 			db.Create(&wk)
@@ -75,7 +77,7 @@ func (strengthService) SaveWorkout(request interface{}) Workout {
 	}
 	defer db.Close()
 
-	db.Model(&workout).Where("rowid = ?", workout.RowId).Updates(map[string]interface{}{
+	db.Model(&workout).Where("rowid = ?", workout.RowID).Updates(map[string]interface{}{
 		"exercise":  workout.Exercise,
 		"weight":    workout.Weight,
 		"sets":      workout.Sets,
@@ -83,9 +85,26 @@ func (strengthService) SaveWorkout(request interface{}) Workout {
 		"completed": workout.Completed,
 		"date":      workout.Date,
 	})
-	db.Raw("SELECT rowid, * from workouts WHERE rowid =?", workout.RowId).Scan(&wk)
+	db.Raw("SELECT rowid, * from workouts WHERE rowid =?", workout.RowID).Scan(&wk)
 	db.Close()
 	return wk
+}
+
+func (strengthService) UpdateRowsDate(request interface{}) {
+	req := request.(strengthRequest)
+	row := req.Row
+
+	db, err := gorm.Open("sqlite3", "./strength.db")
+	if err != nil {
+		fmt.Println("could not connect to database.")
+	}
+	defer db.Close()
+
+	db.Table("workouts").Where("rowid IN (?)", row.RowIds).Updates(map[string]interface{}{
+		"date": row.Date,
+	})
+	db.Close()
+
 }
 
 // var Error = errors.New("Shit fucked yo!")

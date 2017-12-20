@@ -81,9 +81,8 @@ func (strengthService) SaveWorkout(request interface{}) Workout {
     "completed": workout.Completed,
     "date": workout.Date,
   })
-  db.Model(&workout).Where("rowid = ?", workout.RowId).First(&wk)
+  db.Raw("SELECT rowid, * from workouts WHERE rowid =?", workout.RowId).Scan(&wk)
   db.Close()
-
   return wk
 }
 

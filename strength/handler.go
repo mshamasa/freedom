@@ -11,8 +11,14 @@ var IndexHandler = httptransport.NewServer(
   EncodeResponse,
 )
 
-var SaveHandler = httptransport.NewServer(
-  MakeSaveStrengthEndpoint(service),
-  DecodeStrengthPostRequest,
+var SaveRowHandler = httptransport.NewServer(
+  MakeSaveRowEndpoint(service),
+  DecodeStrengthRequest,
+  EncodeResponse,
+)
+
+var SaveWorkoutHandler = httptransport.NewServer(
+  MakeSaveWorkoutEndpoint(service),
+  DecodeStrengthRequest,
   EncodeResponse,
 )

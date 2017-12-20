@@ -12,7 +12,8 @@ type StrengthService interface {
   //TODO error handling...later
   // Index() (StrengthList, error)
   Index(request interface{}) StrengthList
-  Save(request interface{})
+  SaveRow(request interface{})
+  SaveWorkout(request interface{}) Workout
 }
 
 type strengthService struct{}
@@ -38,7 +39,7 @@ func (strengthService) Index(request interface{}) StrengthList {
   return strengthList;
 }
 
-func (strengthService) Save(request interface{}) {
+func (strengthService) SaveRow(request interface{}) {
   req := request.(strengthRequest)
   userId := req.UserId
   strengthList := req.List
@@ -58,6 +59,32 @@ func (strengthService) Save(request interface{}) {
     }
   }
   db.Close()
+}
+
+func (strengthService) SaveWorkout(request interface{}) Workout {
+  var wk Workout
+
+  req := request.(strengthRequest)
+  workout := req.Workout
+
+  db, err := gorm.Open("sqlite3", "./strength.db")
+  if err != nil {
+    fmt.Println("could not connect to database.")
+  }
+  defer db.Close()
+
+  db.Model(&workout).Where("rowid = ?", workout.RowId).Updates(map[string]interface{}{
+    "exercise": workout.Exercise,
+    "weight": workout.Weight,
+    "sets": workout.Sets,
+    "reps": workout.Reps,
+    "completed": workout.Completed,
+    "date": workout.Date,
+  })
+  db.Model(&workout).Where("rowid = ?", workout.RowId).First(&wk)
+  db.Close()
+
+  return wk
 }
 
 

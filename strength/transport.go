@@ -18,16 +18,25 @@ func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
     // if err != nil {
     //   return strengthResponse{list, err.Error()}, nil
     // }
-    return strengthResponse{list, "", ""}, nil
+    return strengthResponse{list, Workout{}, "", ""}, nil
   }
 }
 
-func MakeSaveStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeSaveRowEndpoint(svc StrengthService) endpoint.Endpoint {
   return func(ctx context.Context, request interface{}) (interface{}, error) {
     // TODO error handling...later
     // list, err := svc.Index()
-    svc.Save(request)
-    return strengthResponse{nil, "", ""}, nil
+    svc.SaveRow(request)
+    return strengthResponse{nil, Workout{}, "", ""}, nil
+  }
+}
+
+func MakeSaveWorkoutEndpoint(svc StrengthService) endpoint.Endpoint {
+  return func(ctx context.Context, request interface{}) (interface{}, error) {
+    // TODO error handling...later
+    // list, err := svc.Index()
+    workout := svc.SaveWorkout(request)
+    return strengthResponse{nil, workout, "", ""}, nil
   }
 }
 
@@ -36,7 +45,7 @@ func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, 
   // TODO passing params through url
   // queries := r.URL.Query()
   // request := strengthRequest{vars["userId"], queries["startDate"][0], queries["endDate"][0]}
-  request := strengthRequest{vars["userId"], nil}
+  request := strengthRequest{vars["userId"], Workout{}, nil}
 
   if request.UserId == "" {
     return nil, errors.New("UserId missing!")
@@ -44,15 +53,15 @@ func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, 
   return request, nil
 }
 
-func DecodeStrengthPostRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, error) {
   var request strengthRequest
   json.NewDecoder(r.Body).Decode(&request)
 
   if request.UserId == "" {
     return nil, errors.New("UserId missing!")
   }
-  if len(request.List) == 0 {
-    return nil, errors.New("List Empty!")
+  if len(request.List) == 0 && request.Workout == (Workout{}){
+    return nil, errors.New("Nothing to Save/Update")
   }
 
   return request, nil
@@ -63,15 +72,14 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 type strengthRequest struct {
-  UserId string `json:"userId"`
-  // TODO future....
-  // StartDate string `json:"startDate"`
-  // EndDate string `json:"endDate"`
-  List []Strength `json:"list"`
+  UserId  string      `json:"userId"`
+  Workout Workout     `json:"workout"`
+  List    []Strength  `json:"list"`
 }
 
 type strengthResponse struct {
-  List []Strength `json:"list"`
-  Err string `json:"err, omitempty"`
-  Code string `json:"code, omitempty"`
+  List    []Strength  `json:"list"`
+  Workout Workout     `json:"workout"`
+  Err     string      `json:"err, omitempty"`
+  Code    string      `json:"code, omitempty"`
 }

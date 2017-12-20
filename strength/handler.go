@@ -6,19 +6,19 @@ var svc StrengthService
 var service = strengthService{}
 
 var IndexHandler = httptransport.NewServer(
-  MakeIndexStrengthEndpoint(service),
-  DecodeStrengthGetRequest,
-  EncodeResponse,
+	MakeIndexStrengthEndpoint(service),
+	DecodeStrengthGetRequest,
+	EncodeResponse,
 )
 
 var SaveRowHandler = httptransport.NewServer(
-  MakeSaveRowEndpoint(service),
-  DecodeStrengthRequest,
-  EncodeResponse,
+	MakeSaveRowEndpoint(service),
+	DecodeStrengthRequest,
+	EncodeResponse,
 )
 
 var SaveWorkoutHandler = httptransport.NewServer(
-  MakeSaveWorkoutEndpoint(service),
-  DecodeStrengthRequest,
-  EncodeResponse,
+	MakeSaveWorkoutEndpoint(service),
+	DecodeStrengthRequest,
+	EncodeResponse,
 )

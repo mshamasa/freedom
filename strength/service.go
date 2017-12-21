@@ -18,6 +18,7 @@ type StrengthService interface {
 	SaveRow(request interface{})
 	SaveWorkout(request interface{}) Workout
 	UpdateRowsDate(request interface{})
+	DeleteRow(request interface{})
 }
 
 type strengthService struct{}
@@ -104,7 +105,20 @@ func (strengthService) UpdateRowsDate(request interface{}) {
 		"date": row.Date,
 	})
 	db.Close()
+}
 
+func (strengthService) DeleteRow(request interface{}) {
+	req := request.(strengthRequest)
+	row := req.Row
+
+	db, err := gorm.Open("sqlite3", "./strength.db")
+	if err != nil {
+		fmt.Println("could not connect to database.")
+	}
+	defer db.Close()
+
+	db.Debug().Table("workouts").Where("rowid IN (?)", row.RowIds).Delete(&Workout{})
+	db.Close()
 }
 
 // var Error = errors.New("Shit fucked yo!")

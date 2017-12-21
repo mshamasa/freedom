@@ -32,3 +32,10 @@ var UpdateDateHandler = httptransport.NewServer(
 	DecodeStrengthRequest,
 	EncodeResponse,
 )
+
+// DeleteRowHandler is the entry point to delete a row.
+var DeleteRowHandler = httptransport.NewServer(
+	MakeDeleteRowEndpoint(service),
+	DecodeStrengthRequest,
+	EncodeResponse,
+)

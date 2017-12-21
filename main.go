@@ -16,6 +16,7 @@ func main() {
 	router.Methods("POST").PathPrefix("/strength/save").Handler(strength.SaveRowHandler)
 	router.Methods("PUT").PathPrefix("/strength/saveWorkout").Handler(strength.SaveWorkoutHandler)
 	router.Methods("PUT").PathPrefix("/strength/updateDate").Handler(strength.UpdateDateHandler)
+	router.Methods("DELETE").PathPrefix("/strength/deleteRow").Handler(strength.DeleteRowHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

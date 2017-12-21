@@ -52,6 +52,15 @@ func MakeUpdateDateEndpoint(svc StrengthService) endpoint.Endpoint {
 	}
 }
 
+// MakeDeleteRowEndpoint the endpoint for deleting a row.
+func MakeDeleteRowEndpoint(svc StrengthService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		svc.DeleteRow(request)
+
+		return strengthResponse{nil, Workout{}, "", ""}, nil
+	}
+}
+
 // DecodeStrengthGetRequest will decode the request paramters.
 func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	vars := mux.Vars(r)
@@ -74,8 +83,24 @@ func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, err
 	if request.UserID == "" {
 		return nil, errors.New("userId missing")
 	}
-	if len(request.List) == 0 && request.Workout == (Workout{}) && len(request.Row.RowIds) == 0 {
-		return nil, errors.New("Nothing to Save/Update")
+
+	switch urlPath := r.URL.Path; urlPath {
+	case "/strength/save":
+		if len(request.List) == 0 {
+			return nil, errors.New("no rows to save")
+		}
+		break
+	case "/strength/saveWorkout":
+		if request.Workout == (Workout{}) {
+			return nil, errors.New("no workout record passed to update")
+		}
+		break
+	case "/strength/updateDate":
+	case "/strength/deleteRow":
+		if len(request.Row.RowIds) == 0 {
+			return nil, errors.New("no rowIds passed")
+		}
+		break
 	}
 
 	return request, nil

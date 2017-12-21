@@ -15,6 +15,7 @@ type StrengthService interface {
 	//TODO error handling...later
 	// Index() (StrengthList, error)
 	Index(request interface{}) StrengthList
+	AddRow(request interface{})
 	SaveRow(request interface{})
 	SaveWorkout(request interface{}) Workout
 	UpdateRowsDate(request interface{})
@@ -42,6 +43,26 @@ func (strengthService) Index(request interface{}) StrengthList {
 	strengthList := sortWorkouts(workouts)
 
 	return strengthList
+}
+
+func (strengthService) AddRow(request interface{}) {
+	req := request.(strengthRequest)
+
+	db, err := gorm.Open("sqlite3", "./strength.db")
+	if err != nil {
+		fmt.Println("could not connect to database.")
+	}
+	defer db.Close()
+	// create 3 default rows
+	for i := 0; i < 3; i++ {
+		workout := Workout{
+			UserID:   req.UserID,
+			Exercise: int32(i + 1),
+			Date:     req.StartDate,
+		}
+		db.Create(&workout)
+	}
+	db.Close()
 }
 
 func (strengthService) SaveRow(request interface{}) {

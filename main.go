@@ -13,8 +13,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.Methods("GET").PathPrefix("/strength/{userId}").Handler(strength.IndexHandler)
-	router.Methods("POST").PathPrefix("/strength/save").Handler(strength.SaveRowHandler)
-	router.Methods("PUT").PathPrefix("/strength/addRow").Handler(strength.AddRowHandler)
+	router.Methods("PUT").PathPrefix("/strength/addRows").Handler(strength.AddRowsHandler)
 	router.Methods("PUT").PathPrefix("/strength/saveWorkout").Handler(strength.SaveWorkoutHandler)
 	router.Methods("PUT").PathPrefix("/strength/updateDate").Handler(strength.UpdateDateHandler)
 	router.Methods("DELETE").PathPrefix("/strength/deleteRow").Handler(strength.DeleteRowHandler)

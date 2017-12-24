@@ -23,24 +23,14 @@ func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
 	}
 }
 
-// MakeAddRowEndpoint is the endpoint for add rows.
-func MakeAddRowEndpoint(svc StrengthService) endpoint.Endpoint {
+// MakeAddRowsEndpoint is the endpoint for adding rows.
+func MakeAddRowsEndpoint(svc StrengthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		// TODO error handling...later
 		// list, err := svc.Index()
-		svc.AddRow(request)
+		svc.AddRows(request)
 		list := svc.Index(request)
 		return strengthResponse{list, Workout{}, "", ""}, nil
-	}
-}
-
-// MakeSaveRowEndpoint is the endpoint for saving a row.
-func MakeSaveRowEndpoint(svc StrengthService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		// TODO error handling...later
-		// list, err := svc.Index()
-		svc.SaveRow(request)
-		return strengthResponse{nil, Workout{}, "", ""}, nil
 	}
 }
 
@@ -78,7 +68,7 @@ func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, 
 	// TODO passing params through url
 	// queries := r.URL.Query()
 	// request := strengthRequest{vars["userId"], queries["startDate"][0], queries["endDate"][0]}
-	request := strengthRequest{vars["userId"], Workout{}, nil, Row{}, 0, 0}
+	request := strengthRequest{vars["userId"], Workout{}, nil, Row{}, 0, 0, 0}
 
 	if request.UserID == "" {
 		return nil, errors.New("userId missing")
@@ -92,14 +82,9 @@ func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, err
 	json.NewDecoder(r.Body).Decode(&request)
 
 	switch urlPath := r.URL.Path; urlPath {
-	case "/strength/addRow":
+	case "/strength/addRows":
 		if request.UserID == "" {
 			return nil, errors.New("userId missing")
-		}
-		break
-	case "/strength/save":
-		if len(request.List) == 0 {
-			return nil, errors.New("no rows to save")
 		}
 		break
 	case "/strength/saveWorkout":
@@ -130,6 +115,7 @@ type strengthRequest struct {
 	Row       Row        `json:"row"`
 	StartDate int64      `json:"startDate"`
 	EndDate   int64      `json:"endDate"`
+	Amount    int        `json:"amount"`
 }
 
 type strengthResponse struct {

@@ -12,15 +12,9 @@ var IndexHandler = httptransport.NewServer(
 	EncodeResponse,
 )
 
-// AddRowHandler is the entry point to adding rows.
-var AddRowHandler = httptransport.NewServer(
-	MakeAddRowEndpoint(service),
-	DecodeStrengthRequest,
-	EncodeResponse,
-)
-
-var SaveRowHandler = httptransport.NewServer(
-	MakeSaveRowEndpoint(service),
+// AddRowsHandler is the entry point to adding rows.
+var AddRowsHandler = httptransport.NewServer(
+	MakeAddRowsEndpoint(service),
 	DecodeStrengthRequest,
 	EncodeResponse,
 )

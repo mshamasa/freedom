@@ -12,7 +12,7 @@ import (
 func main() {
 	router := mux.NewRouter()
 
-	router.Methods("GET").PathPrefix("/strength/{userId}").Handler(strength.IndexHandler)
+	router.Methods("GET").PathPrefix("/strength/{userID}").Handler(strength.IndexHandler)
 	router.Methods("PUT").PathPrefix("/strength/addRows").Handler(strength.AddRowsHandler)
 	router.Methods("PUT").PathPrefix("/strength/saveWorkout").Handler(strength.SaveWorkoutHandler)
 	router.Methods("PUT").PathPrefix("/strength/updateDate").Handler(strength.UpdateDateHandler)

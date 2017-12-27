@@ -68,10 +68,10 @@ func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, 
 	// TODO passing params through url
 	// queries := r.URL.Query()
 	// request := strengthRequest{vars["userId"], queries["startDate"][0], queries["endDate"][0]}
-	request := strengthRequest{vars["userId"], Workout{}, nil, Row{}, 0, 0, 0}
+	request := strengthRequest{vars["userID"], Workout{}, nil, Row{}, 0, 0, 0}
 
 	if request.UserID == "" {
-		return nil, errors.New("userId missing")
+		return nil, errors.New("userID missing")
 	}
 	return request, nil
 }
@@ -84,7 +84,7 @@ func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, err
 	switch urlPath := r.URL.Path; urlPath {
 	case "/strength/addRows":
 		if request.UserID == "" {
-			return nil, errors.New("userId missing")
+			return nil, errors.New("userID missing")
 		}
 		break
 	case "/strength/saveWorkout":
@@ -109,7 +109,7 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 type strengthRequest struct {
-	UserID    string     `json:"userId"`
+	UserID    string     `json:"userID"`
 	Workout   Workout    `json:"workout"`
 	List      []Strength `json:"list"`
 	Row       Row        `json:"row"`

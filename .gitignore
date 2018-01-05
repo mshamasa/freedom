@@ -1,8 +1,12 @@
 # ignore executables
 *.exe
 
-#ignore build file
+# ignore build file
 freedom
 
-#ignore random stuff
+# ignore random stuff
 .DS_Store
+
+# misc
+appengine/app.yaml
+appengine/cloud_sql_proxy

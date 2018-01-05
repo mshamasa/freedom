@@ -1,12 +1,11 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
-	"github.com/mshamasa/freedom/strength"
-
 	"github.com/gorilla/mux"
+	"github.com/mshamasa/freedom/strength"
+	"google.golang.org/appengine"
 )
 
 func main() {
@@ -18,5 +17,8 @@ func main() {
 	router.Methods("PUT").PathPrefix("/strength/updateDate").Handler(strength.UpdateDateHandler)
 	router.Methods("DELETE").PathPrefix("/strength/deleteRow").Handler(strength.DeleteRowHandler)
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	http.Handle("/", router)
+	appengine.Main()
+
+	// log.Fatal(http.ListenAndServe(":8080", router))
 }

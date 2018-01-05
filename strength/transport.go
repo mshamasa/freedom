@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/gorilla/mux"
 )
 
 // MakeIndexStrengthEndpoint is the endpoint for retrieving data.
-func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeIndexStrengthEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		// TODO error handling...later
 		// list, err := svc.Index()
@@ -24,7 +26,7 @@ func MakeIndexStrengthEndpoint(svc StrengthService) endpoint.Endpoint {
 }
 
 // MakeAddRowsEndpoint is the endpoint for adding rows.
-func MakeAddRowsEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeAddRowsEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		// TODO error handling...later
 		// list, err := svc.Index()
@@ -35,7 +37,7 @@ func MakeAddRowsEndpoint(svc StrengthService) endpoint.Endpoint {
 }
 
 // MakeSaveWorkoutEndpoint is the endpoint for saving a workout.
-func MakeSaveWorkoutEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeSaveWorkoutEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		// TODO error handling...later
 		// list, err := svc.Index()
@@ -45,7 +47,7 @@ func MakeSaveWorkoutEndpoint(svc StrengthService) endpoint.Endpoint {
 }
 
 // MakeUpdateDateEndpoint is the endpoint for updating the date for records.
-func MakeUpdateDateEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeUpdateDateEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		svc.UpdateRowsDate(request)
 
@@ -54,7 +56,7 @@ func MakeUpdateDateEndpoint(svc StrengthService) endpoint.Endpoint {
 }
 
 // MakeDeleteRowEndpoint the endpoint for deleting a row.
-func MakeDeleteRowEndpoint(svc StrengthService) endpoint.Endpoint {
+func MakeDeleteRowEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		svc.DeleteRow(request)
 
@@ -62,22 +64,41 @@ func MakeDeleteRowEndpoint(svc StrengthService) endpoint.Endpoint {
 	}
 }
 
-// DecodeStrengthGetRequest will decode the request paramters.
-func DecodeStrengthGetRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	vars := mux.Vars(r)
-	// TODO passing params through url
-	// queries := r.URL.Query()
-	// request := strengthRequest{vars["userId"], queries["startDate"][0], queries["endDate"][0]}
-	request := strengthRequest{vars["userID"], Workout{}, nil, Row{}, 0, 0, 0}
+// DecodeStrengthRequest will decode the request paramters without a body.
+func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var row Row
+	var request strengthRequest
 
-	if request.UserID == "" {
-		return nil, errors.New("userID missing")
+	vars := mux.Vars(r)
+
+	switch urlPath := r.URL.Path; urlPath {
+	case "/strength/deleteRow":
+		q := r.URL.Query()
+		request.UserID = q["userID"][0]
+		rowIds := q["rowIds"][0]
+		rowIDList := strings.Split(rowIds, ",")
+		if len(rowIDList) > 0 {
+			for i := 0; i < len(rowIDList); i++ {
+				if id, err := strconv.ParseInt(rowIDList[i], 10, 32); err == nil {
+					row.RowIds = append(row.RowIds, int32(id))
+				}
+			}
+			request.Row = row
+		}
+		break
+	default:
+		request.UserID = vars["userID"]
+		if request.UserID == "" {
+			return nil, errors.New("userID missing")
+		}
+		break
 	}
+
 	return request, nil
 }
 
-// DecodeStrengthRequest will decode the request paramters.
-func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, error) {
+// DecodeStrengthBodyRequest will decode the request with request bodies(PUT, POST etc).
+func DecodeStrengthBodyRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request strengthRequest
 	json.NewDecoder(r.Body).Decode(&request)
 
@@ -93,7 +114,6 @@ func DecodeStrengthRequest(_ context.Context, r *http.Request) (interface{}, err
 		}
 		break
 	case "/strength/updateDate":
-	case "/strength/deleteRow":
 		if len(request.Row.RowIds) == 0 {
 			return nil, errors.New("no rowIds passed")
 		}

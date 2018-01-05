@@ -2,9 +2,9 @@ package strength
 
 import "sort"
 
-func (a StrengthList) Len() int      { return len(a) }
-func (a StrengthList) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a StrengthList) Less(i, j int) bool {
+func (a List) Len() int      { return len(a) }
+func (a List) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a List) Less(i, j int) bool {
 	return a[i].Date > a[j].Date
 }
 
@@ -15,7 +15,7 @@ func sortWorkouts(workouts []Workout) []Strength {
 		workoutsMap[date] = append(workoutsMap[date], workouts[i])
 	}
 
-	strengthList := StrengthList{}
+	strengthList := List{}
 	for k, v := range workoutsMap {
 		strength := Strength{
 			Date:        k,
@@ -24,7 +24,7 @@ func sortWorkouts(workouts []Workout) []Strength {
 		strengthList = append(strengthList, strength)
 	}
 
-	sort.Sort(StrengthList(strengthList))
+	sort.Sort(List(strengthList))
 	return strengthList
 }
 

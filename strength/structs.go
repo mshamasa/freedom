@@ -8,8 +8,8 @@ type Strength struct {
 
 // Workout is the main struct for a work out
 type Workout struct {
-	RowID     int32   `gorm:"AUTO_INCREMENT;column:rowid" json:"rowId"`
-	UserID    string  `gorm:"column:userId" json:"userID"`
+	RowID     int32   `json:"rowID"`
+	UserID    string  `json:"userID"`
 	Exercise  int32   `json:"exercise"`
 	Weight    float32 `json:"weight"`
 	Sets      int32   `json:"sets"`

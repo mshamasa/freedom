@@ -1,20 +1,19 @@
 package strength
 
 import (
+	"database/sql"
 	"fmt"
-
-	"github.com/jinzhu/gorm"
-	// what the flying fuck with these comments.
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"log"
+	"os"
+	// register some standard stuff
+	_ "github.com/go-sql-driver/mysql"
+	_ "google.golang.org/appengine/cloudsql"
 )
 
-// import "errors"
-
-// StrengthService interface that will require implementation of methods.
-type StrengthService interface {
+// Service interface that will have CRUD operations for strenght database
+type Service interface {
 	//TODO error handling...later
-	// Index() (StrengthList, error)
-	Index(request interface{}) StrengthList
+	Index(request interface{}) List
 	AddRows(request interface{})
 	SaveWorkout(request interface{}) Workout
 	UpdateRowsDate(request interface{})
@@ -23,69 +22,88 @@ type StrengthService interface {
 
 type strengthService struct{}
 
-type StrengthList []Strength
+// List slice of Strength objects
+type List []Strength
+
+// WorkoutList slice of Workout objects
 type WorkoutList []Workout
 
-func (strengthService) Index(request interface{}) StrengthList {
-	workouts := WorkoutList{}
-	db, err := gorm.Open("sqlite3", "./strength.db")
-	if err != nil {
-		fmt.Println("could not connect to database.")
-	}
-	defer db.Close()
-	// query
+func (strengthService) Index(request interface{}) List {
 	req := request.(strengthRequest)
-	// TODO set limit based on dates instead of this way
-	db.Raw("SELECT rowid, * FROM workouts WHERE userId = ?", req.UserID).Order("date desc").Limit(20).Scan(&workouts)
-	db.Close()
+	workoutList := WorkoutList{}
+	db := getDatabaseConnection()
 
-	strengthList := sortWorkouts(workouts)
+	rows, err := db.Query("SELECT * FROM workouts WHERE userID=?", req.UserID)
+	if err != nil {
+		log.Fatalf("ERROR IN QUERY!: %v", err)
+	}
+
+	for rows.Next() {
+		var row Workout
+		if err := rows.Scan(&row.RowID, &row.UserID, &row.Exercise, &row.Weight,
+			&row.Sets, &row.Reps, &row.Completed, &row.Date); err != nil {
+			log.Fatalf("ERROR IN ROWS!: %v", err)
+		}
+		workoutList = append(workoutList, row)
+	}
+	defer rows.Close()
+
+	strengthList := sortWorkouts(workoutList)
 
 	return strengthList
 }
 
 func (strengthService) AddRows(request interface{}) {
 	req := request.(strengthRequest)
+	db := getDatabaseConnection()
+	stmt, err := db.Prepare("INSERT INTO workouts (userID, exercise, date) VALUES (?,?,?)")
+	checkErr(err)
 
-	db, err := gorm.Open("sqlite3", "./strength.db")
-	if err != nil {
-		fmt.Println("could not connect to database.")
-	}
-	defer db.Close()
 	// create 3 default rows
 	for i := 0; i < req.Amount; i++ {
-		workout := Workout{
-			UserID:   req.UserID,
-			Exercise: int32(i + 1),
-			Date:     req.StartDate,
-		}
-		db.Create(&workout)
+		res, err := stmt.Exec(req.UserID, (i + 1), req.StartDate)
+		checkErr(err)
+		affect, err := res.RowsAffected()
+		checkErr(err)
+		log.Println(affect)
 	}
-	db.Close()
+	defer db.Close()
 }
 
 func (strengthService) SaveWorkout(request interface{}) Workout {
-	var wk Workout
-
 	req := request.(strengthRequest)
 	workout := req.Workout
+	db := getDatabaseConnection()
 
-	db, err := gorm.Open("sqlite3", "./strength.db")
-	if err != nil {
-		fmt.Println("could not connect to database.")
+	stmt, err := db.Prepare("UPDATE workouts SET exercise=?, weight=?, sets=?, reps=?, completed=?, date=? WHERE rowID=?")
+	checkErr(err)
+	res, err := stmt.Exec(
+		workout.Exercise,
+		workout.Weight,
+		workout.Sets,
+		workout.Reps,
+		workout.Completed,
+		workout.Date,
+		workout.RowID,
+	)
+	checkErr(err)
+
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	log.Println(affect)
+
+	rows, err := db.Query("SELECT * FROM workouts where rowID=?", workout.RowID)
+	checkErr(err)
+
+	var wk Workout
+	for rows.Next() {
+		if err := rows.Scan(&wk.RowID, &wk.UserID, &wk.Exercise, &wk.Weight,
+			&wk.Sets, &wk.Reps, &wk.Completed, &wk.Date); err != nil {
+			log.Fatalf("Error: %v", err)
+		}
 	}
-	defer db.Close()
-
-	db.Model(&workout).Where("rowid = ?", workout.RowID).Updates(map[string]interface{}{
-		"exercise":  workout.Exercise,
-		"weight":    workout.Weight,
-		"sets":      workout.Sets,
-		"reps":      workout.Reps,
-		"completed": workout.Completed,
-		"date":      workout.Date,
-	})
-	db.Raw("SELECT rowid, * from workouts WHERE rowid =?", workout.RowID).Scan(&wk)
 	db.Close()
+
 	return wk
 }
 
@@ -93,15 +111,14 @@ func (strengthService) UpdateRowsDate(request interface{}) {
 	req := request.(strengthRequest)
 	row := req.Row
 
-	db, err := gorm.Open("sqlite3", "./strength.db")
-	if err != nil {
-		fmt.Println("could not connect to database.")
-	}
-	defer db.Close()
-
-	db.Table("workouts").Where("rowid IN (?)", row.RowIds).Updates(map[string]interface{}{
-		"date": row.Date,
-	})
+	db := getDatabaseConnection()
+	stmt, err := db.Prepare("UPDATE workouts SET date = ? WHERE rowID IN (?)")
+	checkErr(err)
+	res, err := stmt.Exec(row.Date, row.RowIds)
+	checkErr(err)
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	log.Println(affect)
 	db.Close()
 }
 
@@ -109,14 +126,49 @@ func (strengthService) DeleteRow(request interface{}) {
 	req := request.(strengthRequest)
 	row := req.Row
 
-	db, err := gorm.Open("sqlite3", "./strength.db")
-	if err != nil {
-		fmt.Println("could not connect to database.")
+	db := getDatabaseConnection()
+	stmt, err := db.Prepare("DELETE FROM workouts WHERE rowID=?")
+	checkErr(err)
+	rowIds := row.RowIds
+	for i := 0; i < len(rowIds); i++ {
+		stmt.Exec(rowIds[i])
 	}
-	defer db.Close()
-
-	db.Debug().Table("workouts").Where("rowid IN (?)", row.RowIds).Delete(&Workout{})
 	db.Close()
 }
 
-// var Error = errors.New("Shit fucked yo!")
+func checkErr(err error) {
+	if err != nil {
+		log.Panicf("%s Error: ", err)
+	}
+}
+
+func mustGetenv(k string) string {
+	v := os.Getenv(k)
+	if v == "" {
+		log.Panicf("%s environment variable not set.", k)
+	}
+	return v
+}
+
+func getDatabaseConnection() *sql.DB {
+	var (
+		/* two ways to connect in dev:
+		** 1: add IP to approved in gcloud
+		** 2: run cloud_sql_proxy and use 127.0.0.1:3306 for connectionName
+		 */
+		connectionName = mustGetenv("CLOUDSQL_CONNECTION_NAME")
+		user           = mustGetenv("CLOUDSQL_USER")
+		password       = mustGetenv("CLOUDSQL_PASSWORD")
+		dbName         = mustGetenv("CLOUDSQL_DATABASE")
+	)
+
+	var db *sql.DB
+
+	var err error
+	db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@cloudsql(%s)/%s", user, password, connectionName, dbName))
+	if err != nil {
+		log.Fatalf("Could not open db: %v", err)
+	}
+
+	return db
+}

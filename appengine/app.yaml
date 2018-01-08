@@ -18,4 +18,4 @@ env_variables:
   CLOUDSQL_USER: root
   CLOUDSQL_PASSWORD: '!6strengthworkouts'
   #CORS OPTIONS
-  ORIGIN_ALLOWED: 'http://freedom-190400.appspot.com'
+  ORIGIN_ALLOWED: '*'

@@ -8,6 +8,7 @@ import (
 	// register some standard stuff
 	_ "github.com/go-sql-driver/mysql"
 	"google.golang.org/appengine"
+	// register some standard stuff
 	_ "google.golang.org/appengine/cloudsql"
 )
 

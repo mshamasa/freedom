@@ -25,6 +25,4 @@ func main() {
 
 	http.Handle("/", handlers.CORS(headersOk, originsOk, methodsOk)(router))
 	appengine.Main()
-
-	// log.Fatal(http.ListenAndServe(":8080", router))
 }

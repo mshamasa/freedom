@@ -7,6 +7,7 @@ import (
 	"os"
 	// register some standard stuff
 	_ "github.com/go-sql-driver/mysql"
+	"google.golang.org/appengine"
 	_ "google.golang.org/appengine/cloudsql"
 )
 
@@ -47,6 +48,7 @@ func (strengthService) Index(request interface{}) List {
 		workoutList = append(workoutList, row)
 	}
 	defer rows.Close()
+	defer db.Close()
 
 	strengthList := sortWorkouts(workoutList)
 
@@ -152,20 +154,27 @@ func mustGetenv(k string) string {
 
 func getDatabaseConnection() *sql.DB {
 	var (
-		/* two ways to connect in dev:
-		** 1: add IP to approved in gcloud
-		** 2: run cloud_sql_proxy and use 127.0.0.1:3306 for connectionName
+		/* To connect in dev:
+		** 1: run './cloud_sql_proxy -instances=freedom-190400:us-central1:strengthworkouts=tcp:3306'
+		** 2: then run app in dev
 		 */
 		connectionName = mustGetenv("CLOUDSQL_CONNECTION_NAME")
 		user           = mustGetenv("CLOUDSQL_USER")
 		password       = mustGetenv("CLOUDSQL_PASSWORD")
 		dbName         = mustGetenv("CLOUDSQL_DATABASE")
+		devConnection  = mustGetenv("SQL_DEV_CONNECTION")
 	)
 
 	var db *sql.DB
-
 	var err error
-	db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@cloudsql(%s)/%s", user, password, connectionName, dbName))
+	var connectionString string
+
+	connectionString = fmt.Sprintf("%s:%s@cloudsql(%s)/%s", user, password, connectionName, dbName)
+	if appengine.IsDevAppServer() {
+		connectionString = fmt.Sprintf("%s:%s@tcp(%s)/%s", user, password, devConnection, dbName)
+	}
+
+	db, err = sql.Open("mysql", connectionString)
 	if err != nil {
 		log.Fatalf("Could not open db: %v", err)
 	}

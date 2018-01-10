@@ -115,13 +115,12 @@ func (strengthService) UpdateRowsDate(request interface{}) {
 	row := req.Row
 
 	db := getDatabaseConnection()
-	stmt, err := db.Prepare("UPDATE workouts SET date = ? WHERE rowID IN (?)")
+	stmt, err := db.Prepare("UPDATE workouts SET date=? WHERE rowID=?")
 	checkErr(err)
-	res, err := stmt.Exec(row.Date, row.RowIds)
-	checkErr(err)
-	affect, err := res.RowsAffected()
-	checkErr(err)
-	log.Println(affect)
+	rowIds := row.RowIds
+	for i := 0; i < len(rowIds); i++ {
+		stmt.Exec(row.Date, rowIds[i])
+	}
 	db.Close()
 }
 

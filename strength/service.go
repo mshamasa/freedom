@@ -7,9 +7,6 @@ import (
 	"os"
 	// register some standard stuff
 	_ "github.com/go-sql-driver/mysql"
-	"google.golang.org/appengine"
-	// register some standard stuff
-	_ "google.golang.org/appengine/cloudsql"
 )
 
 // Service interface that will have CRUD operations for strenght database
@@ -154,15 +151,10 @@ func mustGetenv(k string) string {
 
 func getDatabaseConnection() *sql.DB {
 	var (
-		/* To connect in dev:
-		** 1: run './cloud_sql_proxy -instances=freedom-190400:us-central1:strengthworkouts=tcp:3306'
-		** 2: then run app in dev
-		 */
 		connectionName = mustGetenv("CLOUDSQL_CONNECTION_NAME")
 		user           = mustGetenv("CLOUDSQL_USER")
 		password       = mustGetenv("CLOUDSQL_PASSWORD")
 		dbName         = mustGetenv("CLOUDSQL_DATABASE")
-		devConnection  = mustGetenv("SQL_DEV_CONNECTION")
 	)
 
 	var db *sql.DB
@@ -170,9 +162,6 @@ func getDatabaseConnection() *sql.DB {
 	var connectionString string
 
 	connectionString = fmt.Sprintf("%s:%s@cloudsql(%s)/%s", user, password, connectionName, dbName)
-	if appengine.IsDevAppServer() {
-		connectionString = fmt.Sprintf("%s:%s@tcp(%s)/%s", user, password, devConnection, dbName)
-	}
 
 	db, err = sql.Open("mysql", connectionString)
 	if err != nil {

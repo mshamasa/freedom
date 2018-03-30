@@ -150,18 +150,11 @@ func mustGetenv(k string) string {
 }
 
 func getDatabaseConnection() *sql.DB {
-	var (
-		connectionName = mustGetenv("CLOUDSQL_CONNECTION_NAME")
-		user           = mustGetenv("CLOUDSQL_USER")
-		password       = mustGetenv("CLOUDSQL_PASSWORD")
-		dbName         = mustGetenv("CLOUDSQL_DATABASE")
-	)
-
 	var db *sql.DB
 	var err error
 	var connectionString string
 
-	connectionString = fmt.Sprintf("%s:%s@cloudsql(%s)/%s", user, password, connectionName, dbName)
+	connectionString = fmt.Sprintf("rootuser:!6rootuser@tcp(strengthdbinstance.c6edl7uupl3x.us-east-1.rds.amazonaws.com)/strength")
 
 	db, err = sql.Open("mysql", connectionString)
 	if err != nil {

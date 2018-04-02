@@ -23,5 +23,5 @@ func main() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
 
 	http.Handle("/", handlers.CORS(headersOk, originsOk, methodsOk)(router))
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe(":3000", router)
 }

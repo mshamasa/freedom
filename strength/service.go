@@ -32,7 +32,7 @@ func (strengthService) Index(request interface{}) List {
 	workoutList := WorkoutList{}
 	db := getDatabaseConnection()
 
-	rows, err := db.Query("SELECT * FROM workouts WHERE userID=?", req.UserID)
+	rows, err := db.Query("SELECT * FROM workouts WHERE userID=? ORDER BY date DESC LIMIT 20", req.UserID)
 	if err != nil {
 		log.Fatalf("ERROR IN QUERY!: %v", err)
 	}

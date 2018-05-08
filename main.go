@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	// "github.com/aws/aws-lambda-go/lambda"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mshamasa/freedom/strength"
@@ -23,5 +24,5 @@ func main() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
 
 	http.Handle("/", handlers.CORS(headersOk, originsOk, methodsOk)(router))
-	http.ListenAndServe(":8080", router)
+	// lambda.Start(router)
 }

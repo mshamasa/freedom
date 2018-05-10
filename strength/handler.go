@@ -1,41 +1,90 @@
 package strength
 
-import httptransport "github.com/go-kit/kit/transport/http"
+import (
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
 
-var svc Service
-var service = strengthService{}
+	"github.com/gorilla/mux"
+)
 
 // IndexHandler is the entry point to getting all user data.
-var IndexHandler = httptransport.NewServer(
-	MakeIndexStrengthEndpoint(service),
-	DecodeStrengthRequest,
-	EncodeResponse,
-)
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["userID"]
+	req := Request{UserID: userID}
+
+	list := Index(req)
+
+	response := Response{list, Workout{}, "", ""}
+
+	EncodeResponse(w, response)
+}
 
 // DeleteRowHandler is the entry point to delete a row.
-var DeleteRowHandler = httptransport.NewServer(
-	MakeDeleteRowEndpoint(service),
-	DecodeStrengthRequest,
-	EncodeResponse,
-)
+func DeleteRowHandler(w http.ResponseWriter, r *http.Request) {
+	var row Row
+	var request Request
+
+	q := r.URL.Query()
+	request.UserID = q["userID"][0]
+	rowIds := q["rowIds"][0]
+	rowIDList := strings.Split(rowIds, ",")
+	if len(rowIDList) > 0 {
+		for i := 0; i < len(rowIDList); i++ {
+			if id, err := strconv.ParseInt(rowIDList[i], 10, 32); err == nil {
+				row.RowIds = append(row.RowIds, int32(id))
+			}
+		}
+		request.Row = row
+	}
+
+	DeleteRow(request)
+
+	response := Response{nil, Workout{}, "", ""}
+
+	EncodeResponse(w, response)
+}
 
 // AddRowsHandler is the entry point to adding rows.
-var AddRowsHandler = httptransport.NewServer(
-	MakeAddRowsEndpoint(service),
-	DecodeStrengthBodyRequest,
-	EncodeResponse,
-)
+func AddRowsHandler(w http.ResponseWriter, r *http.Request) {
+	if request, err := DecodeStrengthBodyRequest(r); err == nil {
+		AddRows(request)
+
+		list := Index(request)
+
+		response := Response{list, Workout{}, "", ""}
+
+		EncodeResponse(w, response)
+	} else {
+		log.Panicf("%s Error: ", err)
+	}
+
+}
+
+// UpdateDateHandler handles updating date for all rows passed
+func UpdateDateHandler(w http.ResponseWriter, r *http.Request) {
+	if request, err := DecodeStrengthBodyRequest(r); err == nil {
+		UpdateRowsDate(request)
+
+		response := Response{nil, Workout{}, "", ""}
+
+		EncodeResponse(w, response)
+	} else {
+		log.Panicf("%s Error: ", err)
+	}
+}
 
 // SaveWorkoutHandler is the entry point to updating a single row.
-var SaveWorkoutHandler = httptransport.NewServer(
-	MakeSaveWorkoutEndpoint(service),
-	DecodeStrengthBodyRequest,
-	EncodeResponse,
-)
+func SaveWorkoutHandler(w http.ResponseWriter, r *http.Request) {
+	if request, err := DecodeStrengthBodyRequest(r); err == nil {
+		workout := SaveWorkout(request)
 
-// UpdateDateHandler is the entry point to updating a single row.
-var UpdateDateHandler = httptransport.NewServer(
-	MakeUpdateDateEndpoint(service),
-	DecodeStrengthBodyRequest,
-	EncodeResponse,
-)
+		response := Response{nil, workout, "", ""}
+
+		EncodeResponse(w, response)
+	} else {
+		log.Panicf("%s Error: ", err)
+	}
+}

@@ -4,24 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	// register some standard stuff
 	_ "github.com/go-sql-driver/mysql"
-	// register some standard stuff
-	_ "google.golang.org/appengine/cloudsql"
 )
-
-// Service interface that will have CRUD operations for strenght database
-type Service interface {
-	//TODO error handling...later
-	Index(request interface{}) List
-	AddRows(request interface{})
-	SaveWorkout(request interface{}) Workout
-	UpdateRowsDate(request interface{})
-	DeleteRow(request interface{})
-}
-
-type strengthService struct{}
 
 // List slice of Strength objects
 type List []Strength
@@ -29,12 +14,12 @@ type List []Strength
 // WorkoutList slice of Workout objects
 type WorkoutList []Workout
 
-func (strengthService) Index(request interface{}) List {
-	req := request.(strengthRequest)
+// Index will get all user data with limit set to 20 rows
+func Index(req Request) List {
 	workoutList := WorkoutList{}
 	db := getDatabaseConnection()
 
-	rows, err := db.Query("SELECT * FROM workouts WHERE userID=?", req.UserID)
+	rows, err := db.Query("SELECT * FROM workouts WHERE userID=? ORDER BY date DESC LIMIT 20", req.UserID)
 	if err != nil {
 		log.Fatalf("ERROR IN QUERY!: %v", err)
 	}
@@ -55,8 +40,22 @@ func (strengthService) Index(request interface{}) List {
 	return strengthList
 }
 
-func (strengthService) AddRows(request interface{}) {
-	req := request.(strengthRequest)
+// DeleteRow will delete rows from db
+func DeleteRow(req Request) {
+	row := req.Row
+
+	db := getDatabaseConnection()
+	stmt, err := db.Prepare("DELETE FROM workouts WHERE rowID=?")
+	checkErr(err)
+	rowIds := row.RowIds
+	for i := 0; i < len(rowIds); i++ {
+		stmt.Exec(rowIds[i])
+	}
+	db.Close()
+}
+
+// AddRows will add row to db
+func AddRows(req Request) {
 	db := getDatabaseConnection()
 	stmt, err := db.Prepare("INSERT INTO workouts (userID, exercise, date) VALUES (?,?,?)")
 	checkErr(err)
@@ -72,8 +71,22 @@ func (strengthService) AddRows(request interface{}) {
 	defer db.Close()
 }
 
-func (strengthService) SaveWorkout(request interface{}) Workout {
-	req := request.(strengthRequest)
+// UpdateRowsDate update each row with new date
+func UpdateRowsDate(req Request) {
+	row := req.Row
+
+	db := getDatabaseConnection()
+	stmt, err := db.Prepare("UPDATE workouts SET date=? WHERE rowID=?")
+	checkErr(err)
+	rowIds := row.RowIds
+	for i := 0; i < len(rowIds); i++ {
+		stmt.Exec(row.Date, rowIds[i])
+	}
+	db.Close()
+}
+
+// SaveWorkout will update a workout in db
+func SaveWorkout(req Request) Workout {
 	workout := req.Workout
 	db := getDatabaseConnection()
 
@@ -109,50 +122,13 @@ func (strengthService) SaveWorkout(request interface{}) Workout {
 	return wk
 }
 
-func (strengthService) UpdateRowsDate(request interface{}) {
-	req := request.(strengthRequest)
-	row := req.Row
-
-	db := getDatabaseConnection()
-	stmt, err := db.Prepare("UPDATE workouts SET date=? WHERE rowID=?")
-	checkErr(err)
-	rowIds := row.RowIds
-	for i := 0; i < len(rowIds); i++ {
-		stmt.Exec(row.Date, rowIds[i])
-	}
-	db.Close()
-}
-
-func (strengthService) DeleteRow(request interface{}) {
-	req := request.(strengthRequest)
-	row := req.Row
-
-	db := getDatabaseConnection()
-	stmt, err := db.Prepare("DELETE FROM workouts WHERE rowID=?")
-	checkErr(err)
-	rowIds := row.RowIds
-	for i := 0; i < len(rowIds); i++ {
-		stmt.Exec(rowIds[i])
-	}
-	db.Close()
-}
-
 func checkErr(err error) {
 	if err != nil {
 		log.Panicf("%s Error: ", err)
 	}
 }
 
-func mustGetenv(k string) string {
-	v := os.Getenv(k)
-	if v == "" {
-		log.Panicf("%s environment variable not set.", k)
-	}
-	return v
-}
-
 func getDatabaseConnection() *sql.DB {
-
 	var db *sql.DB
 	var err error
 	var connectionString string

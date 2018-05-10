@@ -23,3 +23,22 @@ type Row struct {
 	RowIds []int32 `json:"rowIds"`
 	Date   int64   `json:"date"`
 }
+
+// Request used for all requests
+type Request struct {
+	UserID    string     `json:"userID"`
+	Workout   Workout    `json:"workout"`
+	List      []Strength `json:"list"`
+	Row       Row        `json:"row"`
+	StartDate int64      `json:"startDate"`
+	EndDate   int64      `json:"endDate"`
+	Amount    int        `json:"amount"`
+}
+
+// Response struct for all responses
+type Response struct {
+	List    []Strength `json:"list"`
+	Workout Workout    `json:"workout"`
+	Err     string     `json:"err, omitempty"`
+	Code    string     `json:"code, omitempty"`
+}
